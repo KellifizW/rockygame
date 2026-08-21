@@ -1,7 +1,10 @@
 export enum GameState {
-  START,
+  MENU,
+  CHARACTER_SELECT,
+  HELP,
   EXPLORING,
   COMBAT,
+  SHOP,
   GAME_OVER,
   VICTORY,
 }
@@ -32,6 +35,40 @@ export interface Entity {
   color: string;
   avatarUrl?: string;
   title?: string;
+  isBoss?: boolean;
+}
+
+export type SpecialId = 'shield-bash' | 'whirlwind' | 'arcane-bolt' | 'backstab';
+
+export interface ClassSpecial {
+  id: SpecialId;
+  name: string;
+  description: string;
+  usesPerCombat: number;
+}
+
+export interface ClassPassive {
+  name: string;
+  description: string;
+}
+
+export interface CharacterClass {
+  id: string;
+  name: string;
+  title: string;
+  playerName: string;
+  description: string;
+  avatarUrl: string;
+  color: string;
+  hp: number;
+  ac: number;
+  attackMod: number;
+  damageDie: number;
+  damageMod: number;
+  potions: number;
+  fleeBonus: number; // additive bonus to flee chance (0..1)
+  special: ClassSpecial;
+  passive: ClassPassive;
 }
 
 export interface Player extends Entity {
@@ -40,6 +77,9 @@ export interface Player extends Entity {
   xpToNext: number;
   potions: number;
   characterClass: string;
+  classId: string;
+  gold: number;
+  kills: number;
 }
 
 export interface MapData {
@@ -54,4 +94,24 @@ export interface CombatState {
   enemy: Entity;
   log: string[];
   playerTurn: boolean;
+  playerSpecialUsesLeft: number;
+  enemyDazed: boolean;
+  playerGuardDown: boolean;
+}
+
+export interface ShopItem {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  icon: string;
+  available: (player: Player) => boolean;
+}
+
+export interface SaveData {
+  version: number;
+  floor: number;
+  player: Player;
+  map: MapData;
+  enemies: Entity[];
 }

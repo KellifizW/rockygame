@@ -3,6 +3,10 @@ import { TileType, MapData, Position, Entity } from './types';
 import goblinImg from '../assets/images/goblin_pixel_icon_1786809549470.jpg';
 import skeletonImg from '../assets/images/skeleton_pixel_icon_1786809561146.jpg';
 import orcImg from '../assets/images/orc_pixel_icon_1786809573065.jpg';
+import dragonImg from '../assets/images/dragon_boss_icon.png';
+
+// The depth at which the final boss awaits. Reaching and slaying it wins the run.
+export const FINAL_FLOOR = 6;
 
 export const rollDice = (sides: number, count: number = 1): number => {
   let total = 0;
@@ -13,13 +17,17 @@ export const rollDice = (sides: number, count: number = 1): number => {
 };
 
 // Generate a simple room-based map using random placement
-export const generateMap = (width: number, height: number): { map: MapData; startPos: Position } => {
+export const generateMap = (
+  width: number,
+  height: number,
+  placeStairs: boolean = true
+): { map: MapData; startPos: Position; stairsPos: Position } => {
   const tiles: TileType[][] = Array.from({ length: height }, () => Array(width).fill(TileType.WALL));
   const discovered: boolean[][] = Array.from({ length: height }, () => Array(width).fill(false));
   const visible: boolean[][] = Array.from({ length: height }, () => Array(width).fill(false));
 
   const mapData: MapData = { width, height, tiles, discovered, visible };
-  
+
   const rooms: { x: number, y: number, w: number, h: number }[] = [];
   const maxRooms = 10;
   const minRoomSize = 3;
@@ -73,16 +81,21 @@ export const generateMap = (width: number, height: number): { map: MapData; star
     }
   }
 
-  // Place stairs in the last room
-  if (rooms.length > 0) {
-    const lastRoom = rooms[rooms.length - 1];
-    mapData.tiles[Math.floor(lastRoom.y + lastRoom.h / 2)][Math.floor(lastRoom.x + lastRoom.w / 2)] = TileType.STAIRS_DOWN;
+  const lastRoom = rooms.length > 0 ? rooms[rooms.length - 1] : rooms[0];
+  const stairsPos = {
+    x: Math.floor(lastRoom.x + lastRoom.w / 2),
+    y: Math.floor(lastRoom.y + lastRoom.h / 2),
+  };
+
+  // Place stairs in the last room (unless this is a boss floor)
+  if (placeStairs) {
+    mapData.tiles[stairsPos.y][stairsPos.x] = TileType.STAIRS_DOWN;
   }
 
   const startRoom = rooms[0];
   const startPos = { x: Math.floor(startRoom.x + startRoom.w / 2), y: Math.floor(startRoom.y + startRoom.h / 2) };
 
-  return { map: mapData, startPos };
+  return { map: mapData, startPos, stairsPos };
 };
 
 const carveH = (map: MapData, x1: number, x2: number, y: number) => {
@@ -109,22 +122,45 @@ export const updateFOV = (map: MapData, pos: Position, radius: number) => {
     }
   }
 
-  // Simple raycasting or just a square radius for simplicity
+  // Simple radial radius for simplicity (line-of-sight through walls is ignored)
   for (let y = pos.y - radius; y <= pos.y + radius; y++) {
     for (let x = pos.x - radius; x <= pos.x + radius; x++) {
       if (x >= 0 && x < map.width && y >= 0 && y < map.height) {
-        // Very basic line of sight (just distance)
         const dist = Math.sqrt((x - pos.x) ** 2 + (y - pos.y) ** 2);
         if (dist <= radius) {
-           map.visible[y][x] = true;
-           map.discovered[y][x] = true;
+          map.visible[y][x] = true;
+          map.discovered[y][x] = true;
         }
       }
     }
   }
 };
 
-export const generateEnemies = (map: MapData, floorLevel: number): Entity[] => {
+export const createBoss = (floorLevel: number, pos: Position): Entity => {
+  return {
+    id: 'dragon-boss',
+    pos,
+    name: 'Emberwyrm',
+    hp: 70 + floorLevel * 2,
+    maxHp: 70 + floorLevel * 2,
+    ac: 14,
+    attackMod: 6,
+    damageDie: 12,
+    damageMod: 3,
+    icon: 'D',
+    color: 'text-red-500',
+    avatarUrl: dragonImg,
+    title: 'The Final Terror',
+    isBoss: true,
+  };
+};
+
+export const generateEnemies = (map: MapData, floorLevel: number, bossPos?: Position): Entity[] => {
+  // Boss floor: spawn only the boss at the designated position.
+  if (bossPos) {
+    return [createBoss(floorLevel, bossPos)];
+  }
+
   const enemies: Entity[] = [];
   const enemyTypes = [
     { name: 'Goblin Scout', hp: 5, ac: 10, attackMod: 2, damageDie: 4, icon: 'g', color: 'text-green-500', avatarUrl: goblinImg, title: 'Sneaky Raider' },
@@ -156,4 +192,8 @@ export const generateEnemies = (map: MapData, floorLevel: number): Entity[] => {
     }
   }
   return enemies;
+};
+
+export const goldFor = (enemy: Entity, floorLevel: number): number => {
+  return Math.floor(enemy.maxHp * 2) + floorLevel * 2;
 };

@@ -5,7 +5,10 @@ import pigWarriorImg from '../assets/images/armored_pig_warrior_icon_17868097298
 interface CombatScreenProps {
   player: Player;
   combatState: CombatState;
+  specialName: string;
+  specialUsesLeft: number;
   onAttack: () => void;
+  onSpecial: () => void;
   onHeal: () => void;
   onFlee: () => void;
 }
@@ -13,7 +16,10 @@ interface CombatScreenProps {
 export const CombatScreen: React.FC<CombatScreenProps> = ({ 
   player, 
   combatState, 
+  specialName,
+  specialUsesLeft,
   onAttack, 
+  onSpecial, 
   onHeal, 
   onFlee 
 }) => {
@@ -171,7 +177,7 @@ export const CombatScreen: React.FC<CombatScreenProps> = ({
           </div>
         </div>
         
-        <div className="w-48 sm:w-80 p-3 sm:p-4 grid grid-cols-2 gap-2 bg-[#0f172a] shrink-0">
+        <div className="w-56 sm:w-80 p-3 sm:p-4 grid grid-cols-2 gap-2 bg-[#0f172a] shrink-0">
           <button 
             onClick={onAttack} 
             disabled={!playerTurn}
@@ -179,6 +185,15 @@ export const CombatScreen: React.FC<CombatScreenProps> = ({
           >
             <span>Strike</span>
             <span className="text-[8px] opacity-50 mt-0.5">[1d{player.damageDie}+{player.damageMod}]</span>
+          </button>
+          
+          <button 
+            onClick={onSpecial} 
+            disabled={!playerTurn || specialUsesLeft <= 0}
+            className="bg-purple-900/50 border-2 border-purple-500/50 text-purple-200 text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:bg-purple-800 hover:border-purple-400 disabled:opacity-30 disabled:hover:bg-purple-900/50 disabled:hover:border-purple-500/50 flex flex-col items-center justify-center p-2 shadow-[0_0_10px_rgba(147,51,234,0.1)] hover:shadow-[0_0_15px_rgba(147,51,234,0.4)] transition-all cursor-pointer disabled:cursor-not-allowed"
+          >
+            <span>{specialName}</span>
+            <span className="text-[8px] opacity-50 mt-0.5">[{specialUsesLeft} Left]</span>
           </button>
           
           <button 
@@ -193,7 +208,7 @@ export const CombatScreen: React.FC<CombatScreenProps> = ({
           <button 
             onClick={onFlee} 
             disabled={!playerTurn}
-            className="col-span-2 bg-slate-800 border-2 border-slate-600 text-slate-300 text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:bg-slate-700 disabled:opacity-30 disabled:hover:bg-slate-800 disabled:hover:border-slate-600 flex flex-col items-center justify-center p-2 transition-all cursor-pointer disabled:cursor-not-allowed"
+            className="bg-slate-800 border-2 border-slate-600 text-slate-300 text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:bg-slate-700 disabled:opacity-30 disabled:hover:bg-slate-800 disabled:hover:border-slate-600 flex flex-col items-center justify-center p-2 transition-all cursor-pointer disabled:cursor-not-allowed"
           >
             <span>Retreat</span>
             <span className="text-[8px] opacity-50 mt-0.5">[Evasion Check]</span>
