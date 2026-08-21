@@ -1,6 +1,6 @@
 {
-  "name": "Pixel D&D Crawler",
-  "description": "A pixel art dungeon and dragon type RPG game featuring turn-based combat and procedurally generated maps.",
+  "name": "Pixel Dungeon Crawler",
+  "description": "A turn-based roguelike dungeon crawler featuring procedural maps, four hero classes with unique abilities, loot and gold, and a final boss.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
